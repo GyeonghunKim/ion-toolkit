@@ -3,6 +3,7 @@ setup.py
 ion_toolkit/__init__.py
 ion_toolkit/energy_level.py
 ion_toolkit/ion.py
+ion_toolkit/units.py
 ion_toolkit.egg-info/PKG-INFO
 ion_toolkit.egg-info/SOURCES.txt
 ion_toolkit.egg-info/dependency_links.txt
