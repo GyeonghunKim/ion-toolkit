@@ -1,0 +1,51 @@
+{
+    "species": "Ba",
+    "mass_number": 138,
+    "energy_levels": [
+        {
+            "energy_Hz": 0.0,
+            "order": "FineStructure",
+            "n": 6,
+            "L": "S",
+            "J": 0.5,
+            "lande_g_factor": 2.8,
+            "line_width_2_pi_Hz": 0.0
+        },
+        {
+            "energy_Hz": 607.4263e12,
+            "order": "FineStructure",
+            "n": 6,
+            "L": "P",
+            "J": 0.5,
+            "lande_g_factor": 0.9,
+            "line_width_2_pi_Hz": 19.89e6
+        },
+        {
+            "energy_Hz": 658.1165e12,
+            "order": "FineStructure",
+            "n": 6,
+            "L": "P",
+            "J": 1.5,
+            "lande_g_factor": 1.9,
+            "line_width_2_pi_Hz": 26.53e6
+        },
+        {
+            "energy_Hz": 146.1144e12,
+            "order": "FineStructure",
+            "n": 5,
+            "L": "D",
+            "J": 1.5,
+            "lande_g_factor": 1.2,
+            "line_width_2_pi_Hz": 1.941e-3
+        },
+        {
+            "energy_Hz": 170.1264e12,
+            "order": "FineStructure",
+            "n": 5,
+            "L": "D",
+            "J": 2.5,
+            "lande_g_factor": 1.7,
+            "line_width_2_pi_Hz": 4.547e-3
+        }
+    ]
+}

@@ -1,0 +1,9 @@
+Metadata-Version: 2.4
+Name: ion_toolkit
+Version: 1.0
+Summary: Ion manipulation toolkit
+Author: Gyeonghun Kim
+Author-email: gyeonghun.kim@duke.edu
+Dynamic: author
+Dynamic: author-email
+Dynamic: summary
