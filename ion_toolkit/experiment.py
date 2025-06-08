@@ -120,6 +120,14 @@ class Experiment:
     def add_levels(self, levels: List[EnergyLevel]):
         self.levels.extend(levels)
 
+    def get_hamiltonian(self):
+        # TODO: implement it with qutip 
+        raise NotImplementedError
+    
+    def solve(self, t_list: List[float]):
+        # TODO: implement it with qutip 
+        raise NotImplementedError
+    
     def add_laser(
         self, laser: Laser, transition_pair: List[Tuple[EnergyLevel, EnergyLevel]]
     ):
