@@ -9,4 +9,6 @@ ion_toolkit/laser.py
 ion_toolkit/units.py
 ion_toolkit/utils.py
 ion_toolkit.egg-info/PKG-INFO
-ion_toolkit
+ion_toolkit.egg-info/SOURCES.txt
+ion_toolkit.egg-info/dependency_links.txt
+ion_toolkit.egg-info/top_level.txt
