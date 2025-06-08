@@ -1,5 +1,7 @@
 from typing import List, Dict, Tuple
 import numpy as np
+from sympy import S
+from sympy.physics.wigner import wigner_3j
 from .ion import Ion
 from .laser import Laser
 from .energy_level import (
@@ -11,6 +13,7 @@ from .energy_level import (
 )
 from enum import Enum
 from .units import Constants, Units
+from .utils import number_to_sympy, sympy_to_number
 
 
 class TransitionOrder(Enum):
@@ -35,7 +38,16 @@ class Transition:
             self.lower_level = level_1
             self.upper_level = level_2
         self.transition_order = self.get_transition_order()
-        self.transition_linewidth = self.upper_level.line_width
+        self.transition_linewidth = (
+            self.upper_level.line_width
+            + self.lower_level.line_width
+            + self.laser.line_width
+        )
+        self.transition_branching_ratio = self.get_transition_branching_ratio()
+        self.rabi_frequency = self.get_rabi_frequency()
+
+    def get_transition_branching_ratio(self):
+        return self.upper_level.branching_ratios[self.lower_level.name]
 
     def get_transition_energy(self):
         return self.level1.energy - self.level2.energy
@@ -55,12 +67,45 @@ class Transition:
         return self.__str__()
 
     def get_rabi_frequency(self):
-        # coefficient = (
-        #     self.get_transition_energy() / Constants.hbar * np.sqrt(3 * Constants.epsilon_0 * Constants.hbar * self.laser.wavelength**3 * self.)
-        # )
-        # return coefficient * self.laser.get_electric_field_amplitude()
-
-        pass
+        if self.transition_order == TransitionOrder.dipole:
+            coefficient = (
+                self.laser.get_electric_field_amplitude()
+                / Constants.h_bar
+                * np.sqrt(
+                    3
+                    * Constants.epsilon_0
+                    * Constants.h_bar
+                    * self.laser.wavelength**3
+                    * self.transition_branching_ratio
+                    * self.transition_linewidth
+                    / (8 * np.pi**2)
+                )
+            ) * np.sqrt(2 * self.upper_level.J + 1)
+            sign = (-1) ** (
+                self.lower_level.J
+                + self.upper_level.J
+                + max(self.lower_level.J, self.upper_level.J)
+                - self.upper_level.m
+            )
+            polarization_effect = 0j
+            for q, eps_q in zip(
+                range(-1, 2), self.laser.polarization.epsilon_in_spherical_tensor
+            ):
+                polarization_effect += eps_q * sympy_to_number(
+                    wigner_3j(
+                        number_to_sympy(self.upper_level.J),
+                        number_to_sympy(1),
+                        number_to_sympy(self.lower_level.J),
+                        -number_to_sympy(self.upper_level.m),
+                        number_to_sympy(q),
+                        number_to_sympy(self.lower_level.m),
+                    )
+                )
+            return sign * coefficient * polarization_effect
+        elif self.transition_order == TransitionOrder.quadrupole:
+            raise NotImplementedError("Quadrupole transitions not implemented")
+        else:
+            raise ValueError("Transition order not supported")
 
 
 class Experiment:
@@ -90,23 +135,19 @@ class Experiment:
                     for level_1_zeeman_level in level_1.zeeman_levels:
                         for level_2_zeeman_level in level_2.zeeman_levels:
                             self.transitions.append(
-                                [
-                                    Transition(
-                                        level_1_zeeman_level,
-                                        level_2_zeeman_level,
-                                        laser,
-                                        self.magnetic_field,
-                                    )
-                                ]
+                                Transition(
+                                    level_1_zeeman_level,
+                                    level_2_zeeman_level,
+                                    laser,
+                                    self.magnetic_field,
+                                )
                             )
                 else:
                     for zeeman_level in level_1.zeeman_levels:
                         self.transitions.append(
-                            [
-                                Transition(
-                                    zeeman_level, level_2, laser, self.magnetic_field
-                                )
-                            ]
+                            Transition(
+                                zeeman_level, level_2, laser, self.magnetic_field
+                            )
                         )
             else:
                 if isinstance(level_2, FineStructure) or isinstance(
@@ -115,13 +156,11 @@ class Experiment:
                     # level_1 is a ZeemanLevel and level_2 is a FineStructure or HyperfineStructure
                     for zeeman_level in level_2.zeeman_levels:
                         self.transitions.append(
-                            [
-                                Transition(
-                                    level_1, zeeman_level, laser, self.magnetic_field
-                                )
-                            ]
+                            Transition(
+                                level_1, zeeman_level, laser, self.magnetic_field
+                            )
                         )
                 else:  # level_1 is a ZeemanLevel and level_2 is ZeemanLevel
                     self.transitions.append(
-                        [Transition(level_1, level_2, laser, self.magnetic_field)]
+                        Transition(level_1, level_2, laser, self.magnetic_field)
                     )

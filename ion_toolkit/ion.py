@@ -19,14 +19,14 @@ class Ion:
         )
         self.library = json.load(open(self.library_name))
         self.energy_levels: List[EnergyLevel] = []
-        self.branching_ratios: defaultdict[str, Dict[str, float]] = defaultdict(dict)
+        self.branching_ratios: defaultdict[str, defaultdict[str, float]] = defaultdict(
+            lambda: defaultdict(float)
+        )
         self._load_branching_ratios()
         self._load_energy_levels()
 
     def _load_branching_ratios(self):
         for branching_ratio in self.library["branching_ratios"]:
-            if branching_ratio["upper_level"] not in self.branching_ratios:
-                self.branching_ratios[branching_ratio["upper_level"]] = {}
             self.branching_ratios[branching_ratio["upper_level"]][
                 branching_ratio["lower_level"]
             ] = branching_ratio["branching_ratio"]

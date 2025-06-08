@@ -51,6 +51,7 @@ class Constants:
     h_bar = 1.054571817e-34 * Units.J * Units.s
     h = 2 * np.pi * h_bar
     epsilon_0 = 8.8541878128e-12 * Units.F / Units.m
+    c = 299792458 * Units.m / Units.s
 
 
 Units.eV = Constants.e * Units.V
