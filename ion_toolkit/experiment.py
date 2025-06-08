@@ -164,3 +164,59 @@ class Experiment:
                     self.transitions.append(
                         Transition(level_1, level_2, laser, self.magnetic_field)
                     )
+
+    def plot_transitions(self):
+        """Plot available transitions with their Rabi frequencies."""
+        import matplotlib.pyplot as plt
+
+        if not self.transitions:
+            return
+
+        # gather unique energy levels from transitions
+        levels = {}
+        for t in self.transitions:
+            levels[t.lower_level] = t.lower_level.energy
+            levels[t.upper_level] = t.upper_level.energy
+
+        # sort levels by energy
+        sorted_levels = sorted(levels.items(), key=lambda x: x[1])
+        level_pos = {lev: i for i, (lev, _) in enumerate(sorted_levels)}
+        energies_thz = {lev: energy / (Constants.h * Units.THz) for lev, energy in levels.items()}
+
+        # prepare colors for lasers
+        unique_lasers = list(dict.fromkeys([t.laser for t in self.transitions]))
+        colors = plt.cm.tab10(range(len(unique_lasers)))
+        laser_color = {laser: colors[i] for i, laser in enumerate(unique_lasers)}
+
+        max_rabi = max(abs(t.rabi_frequency) for t in self.transitions if t.rabi_frequency != 0)
+        if max_rabi == 0:
+            max_rabi = 1
+
+        # plot energy levels
+        for lev, pos in level_pos.items():
+            plt.scatter(pos, energies_thz[lev], color="black")
+            plt.text(pos, energies_thz[lev], lev.name, ha="center", va="bottom", fontsize=8)
+
+        # plot transitions with line width proportional to rabi frequency
+        for t in self.transitions:
+            if t.rabi_frequency == 0:
+                continue
+            x1 = level_pos[t.lower_level]
+            x2 = level_pos[t.upper_level]
+            y1 = energies_thz[t.lower_level]
+            y2 = energies_thz[t.upper_level]
+            width = 1 + 4 * abs(t.rabi_frequency) / max_rabi
+            plt.plot([x1, x2], [y1, y2], color=laser_color[t.laser], linewidth=width)
+
+        # make legend for lasers
+        from matplotlib.lines import Line2D
+
+        legend_elements = [
+            Line2D([0], [0], color=laser_color[l], lw=2, label=f"laser {i}")
+            for i, l in enumerate(unique_lasers)
+        ]
+        plt.legend(handles=legend_elements)
+        plt.xlabel("Level index")
+        plt.ylabel("Energy (THz)")
+        plt.tight_layout()
+        plt.show()
