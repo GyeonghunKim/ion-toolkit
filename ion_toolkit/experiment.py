@@ -120,13 +120,97 @@ class Experiment:
     def add_levels(self, levels: List[EnergyLevel]):
         self.levels.extend(levels)
 
-    def get_hamiltonian(self):
-        # TODO: implement it with qutip 
-        raise NotImplementedError
-    
-    def solve(self, t_list: List[float]):
-        # TODO: implement it with qutip 
-        raise NotImplementedError
+    def _collect_levels(self) -> List[EnergyLevel]:
+        """Return a list of unique energy levels involved in the experiment."""
+        levels = list(self.levels)
+        for t in self.transitions:
+            if t.lower_level not in levels:
+                levels.append(t.lower_level)
+            if t.upper_level not in levels:
+                levels.append(t.upper_level)
+        return levels
+
+    def get_hamiltonian(self, using_rwa: bool = True):
+        """Construct the system Hamiltonian.
+
+        Parameters
+        ----------
+        using_rwa : bool, optional
+            If ``True`` the interaction Hamiltonian is constructed under the
+            rotating wave approximation.
+        """
+        import qutip as qt
+
+        levels = self._collect_levels()
+        n = len(levels)
+        energies = [lev.energy / Constants.h_bar for lev in levels]
+        H0 = qt.Qobj(np.diag(energies))
+
+        H = [H0]
+
+        for tr in self.transitions:
+            i = levels.index(tr.lower_level)
+            j = levels.index(tr.upper_level)
+            op = qt.basis(n, j) * qt.basis(n, i).dag()
+            if using_rwa:
+                w0 = abs(tr.upper_level.energy - tr.lower_level.energy) / Constants.h
+                delta = tr.laser.get_frequency() - w0
+
+                def f_plus(t, args=None, Omega=tr.rabi_frequency, d=delta):
+                    return 0.5 * Omega * np.exp(-1j * d * t)
+
+                def f_minus(t, args=None, Omega=tr.rabi_frequency, d=delta):
+                    return 0.5 * Omega * np.exp(1j * d * t)
+
+                H.append([op, f_plus])
+                H.append([op.dag(), f_minus])
+            else:
+                wL = tr.laser.get_frequency()
+
+                def f(t, args=None, Omega=tr.rabi_frequency, w=wL):
+                    return Omega * np.cos(w * t)
+
+                H.append([op + op.dag(), f])
+
+        return H, levels
+
+    def solve(
+        self,
+        t_list: List[float],
+        using_rwa: bool = True,
+        initial_state=None,
+    ):
+        """Solve the Schr\u00f6dinger equation for the experiment."""
+        import qutip as qt
+
+        H, levels = self.get_hamiltonian(using_rwa=using_rwa)
+        n = len(levels)
+        if initial_state is None:
+            initial_state = qt.basis(n, 0)
+
+        e_ops = [qt.basis(n, i) * qt.basis(n, i).dag() for i in range(n)]
+        result = qt.sesolve(H, initial_state, t_list, e_ops=e_ops)
+        self._last_levels = levels
+        self._last_result = result
+        return result
+
+    def plot_populations(self, result=None):
+        """Plot state populations as a function of time."""
+        import matplotlib.pyplot as plt
+
+        if result is None:
+            result = getattr(self, "_last_result", None)
+            if result is None:
+                return
+        levels = getattr(self, "_last_levels", self._collect_levels())
+        times = result.times
+        for i, lev in enumerate(levels):
+            plt.plot(times, result.expect[i], label=lev.name)
+        plt.xlabel("Time (s)")
+        plt.ylabel("Population")
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
     
     def add_laser(
         self, laser: Laser, transition_pair: List[Tuple[EnergyLevel, EnergyLevel]]
