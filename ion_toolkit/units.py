@@ -2,6 +2,7 @@ from typing import Optional
 
 import numpy as np
 
+
 class Units:
     # SI units
     m = 1
@@ -27,6 +28,9 @@ class Units:
     # Charge units
     C = 1
 
+    # Capacitance units
+    F = s**4 * A**2 / (kg * m**2)
+
     # Energy units
     J = 1
 
@@ -46,7 +50,4 @@ class Constants:
     mu_B = 9.2740100657e-24 * Units.J / Units.T
     h_bar = 1.054571817e-34 * Units.J * Units.s
     h = 2 * np.pi * h_bar
-    
-
-Units.eV = Constants.e * Units.V
-Units.meV = 1e-3 * Units.eV
+    ep
