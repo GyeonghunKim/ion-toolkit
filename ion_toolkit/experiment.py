@@ -199,12 +199,11 @@ class Experiment:
         if max_rabi == 0:
             max_rabi = 1
 
-        # plot energy levels
+        # plot energy levels as small horizontal lines instead of points
         for lev, pos in level_pos.items():
-            plt.scatter(pos, energies_thz[lev], color="black")
-            plt.text(
-                pos, energies_thz[lev], lev.name, ha="center", va="bottom", fontsize=8
-            )
+            energy = energies_thz[lev]
+            plt.hlines(energy, pos - 0.3, pos + 0.3, color="black")
+            plt.text(pos, energy, lev.name, ha="center", va="bottom", fontsize=8)
 
         # plot transitions with line width proportional to rabi frequency
         for t in self.transitions:
@@ -221,8 +220,8 @@ class Experiment:
         from matplotlib.lines import Line2D
 
         legend_elements = [
-            Line2D([0], [0], color=laser_color[l], lw=2, label=f"laser {i}")
-            for i, l in enumerate(unique_lasers)
+            Line2D([0], [0], color=laser_color[l], lw=2, label=l.name)
+            for l in unique_lasers
         ]
         plt.legend(handles=legend_elements)
 
