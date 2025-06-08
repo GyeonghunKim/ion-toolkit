@@ -42,11 +42,13 @@ class Polarization:
 class Laser:
     def __init__(
         self,
+        name: str,
         frequency: float,
         intensity: float,
         line_width: float,
         polarization: Polarization,
     ):
+        self.name = name
         self.frequency = frequency
         self.wavelength = Constants.c / frequency
         self.intensity = intensity
@@ -54,4 +56,8 @@ class Laser:
         self.polarization = polarization
         self.k_hat = polarization.k_hat
 
-    def get_frequency(self)
+    def get_frequency(self):
+        return Constants.c / self.wavelength
+
+    def get_electric_field_amplitude(self):
+        return np.sqrt(2 * self.intensity / (Constants.c * Constants.epsilon_0))

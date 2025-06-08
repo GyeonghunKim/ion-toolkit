@@ -152,3 +152,36 @@ class HyperfineStructure(EnergyLevel):
         line_width: float,
         branching_ratios: List[Dict[str, float]],
     ):
+        super().__init__(name, energy, n, I, L, J, line_width, branching_ratios)
+        self.F = F
+        self.n_zeeman_levels = 2 * F + 1
+        self.lande_g_factor = 1 + (F * (F + 1) - J * (J + 1) + I * (I + 1)) / (
+            2 * F * (F + 1)
+        )
+        self.zeeman_levels = [
+            HyperfineStructureZeemanLevel(
+                self.name,
+                self.energy,
+                self.n,
+                self.I,
+                self.L,
+                self.J,
+                self.F,
+                m_F,
+                self.line_width,
+                self.branching_ratios,
+            )
+            for m_F in np.arange(-F, F + 1)
+        ]
+        self.spontaneous_emission: Dict[str, float] = {}
+
+    def apply_magnetic_field(self, magentic_field: float):
+        for zeeman_level in self.zeeman_levels:
+            zeeman_level.energy = self.energy
+            zeeman_level.apply_magnetic_field(magentic_field)
+
+    def __str__(self):
+        return f"HyperfineStructure(energy={self.energy/Constants.h/Units.THz} THz, n={self.n}, I={self.I}, L={self.L}, J={self.J}, F={self.F})"
+
+    def __repr__(self):
+        return self.__str__()

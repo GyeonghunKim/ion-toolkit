@@ -50,4 +50,9 @@ class Constants:
     mu_B = 9.2740100657e-24 * Units.J / Units.T
     h_bar = 1.054571817e-34 * Units.J * Units.s
     h = 2 * np.pi * h_bar
-    ep
+    epsilon_0 = 8.8541878128e-12 * Units.F / Units.m
+    c = 299792458 * Units.m / Units.s
+
+
+Units.eV = Constants.e * Units.V
+Units.meV = 1e-3 * Units.eV

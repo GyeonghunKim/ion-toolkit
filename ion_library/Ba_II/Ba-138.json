@@ -46,3 +46,36 @@
             "line_width_2_pi_Hz": 4.547e-3
         }
     ],
+    "branching_ratios": [
+        {
+            "upper_level": "6P1.5",
+            "lower_level": "6S0.5",
+            "branching_ratio": 0.742
+        },
+        {
+            "upper_level": "6P1.5",
+            "lower_level": "5D1.5",
+            "branching_ratio": 0.028
+        },
+        {
+            "upper_level": "6P1.5",
+            "lower_level": "5D2.5",
+            "branching_ratio": 0.23
+        },
+        {
+            "upper_level": "6P0.5",
+            "lower_level": "6S0.5",
+            "branching_ratio": 0.732
+        },
+        {
+            "upper_level": "6P0.5",
+            "lower_level": "5D1.5",
+            "branching_ratio": 0.268
+        },
+        {
+            "upper_level": "5D2.5",
+            "lower_level": "6S0.5",
+            "branching_ratio": 0.846
+        }
+    ]
+}

@@ -117,4 +117,118 @@ class Experiment:
         self.ion.apply_magnetic_field(magnetic_field)
         self.lasers: List[Laser] = []
 
-    
+    def add_levels(self, levels: List[EnergyLevel]):
+        self.levels.extend(levels)
+
+    def add_laser(
+        self, laser: Laser, transition_pair: List[Tuple[EnergyLevel, EnergyLevel]]
+    ):
+        self.lasers.append(laser)
+        for level_1, level_2 in transition_pair:
+            if isinstance(level_1, FineStructure) or isinstance(
+                level_1, HyperfineStructure
+            ):
+                if isinstance(level_2, FineStructure) or isinstance(
+                    level_2, HyperfineStructure
+                ):
+                    # level_1 is a FineStructure or HyperfineStructure and level_2 is a FineStructure or HyperfineStructure
+                    for level_1_zeeman_level in level_1.zeeman_levels:
+                        for level_2_zeeman_level in level_2.zeeman_levels:
+                            self.transitions.append(
+                                Transition(
+                                    level_1_zeeman_level,
+                                    level_2_zeeman_level,
+                                    laser,
+                                    self.magnetic_field,
+                                )
+                            )
+                else:
+                    for zeeman_level in level_1.zeeman_levels:
+                        self.transitions.append(
+                            Transition(
+                                zeeman_level, level_2, laser, self.magnetic_field
+                            )
+                        )
+            else:
+                if isinstance(level_2, FineStructure) or isinstance(
+                    level_2, HyperfineStructure
+                ):
+                    # level_1 is a ZeemanLevel and level_2 is a FineStructure or HyperfineStructure
+                    for zeeman_level in level_2.zeeman_levels:
+                        self.transitions.append(
+                            Transition(
+                                level_1, zeeman_level, laser, self.magnetic_field
+                            )
+                        )
+                else:  # level_1 is a ZeemanLevel and level_2 is ZeemanLevel
+                    self.transitions.append(
+                        Transition(level_1, level_2, laser, self.magnetic_field)
+                    )
+
+    def plot_transitions(self):
+        """Plot available transitions with their Rabi frequencies."""
+        import matplotlib.pyplot as plt
+
+        if not self.transitions:
+            return
+
+        # gather unique energy levels and corresponding magnetic quantum numbers
+        levels = {}
+        m_values = set()
+        for t in self.transitions:
+            for lev in (t.lower_level, t.upper_level):
+                levels[lev] = lev.energy
+                m_values.add(getattr(lev, "m", 0))
+
+        # map magnetic quantum number to x coordinate
+        m_list = sorted(m_values)
+        m_to_x = {m: i for i, m in enumerate(m_list)}
+        level_pos = {lev: m_to_x.get(getattr(lev, "m", 0)) for lev in levels}
+        energies_thz = {
+            lev: energy / (Constants.h * Units.THz) for lev, energy in levels.items()
+        }
+
+        # prepare colors for lasers
+        unique_lasers = list(dict.fromkeys([t.laser for t in self.transitions]))
+        colors = plt.cm.tab10(range(len(unique_lasers)))
+        laser_color = {laser: colors[i] for i, laser in enumerate(unique_lasers)}
+
+        max_rabi = max(
+            abs(t.rabi_frequency) for t in self.transitions if t.rabi_frequency != 0
+        )
+        if max_rabi == 0:
+            max_rabi = 1
+
+        # plot energy levels
+        for lev, pos in level_pos.items():
+            plt.scatter(pos, energies_thz[lev], color="black")
+            plt.text(
+                pos, energies_thz[lev], lev.name, ha="center", va="bottom", fontsize=8
+            )
+
+        # plot transitions with line width proportional to rabi frequency
+        for t in self.transitions:
+            if t.rabi_frequency == 0:
+                continue
+            x1 = level_pos[t.lower_level]
+            x2 = level_pos[t.upper_level]
+            y1 = energies_thz[t.lower_level]
+            y2 = energies_thz[t.upper_level]
+            width = 1 + 4 * abs(t.rabi_frequency) / max_rabi
+            plt.plot([x1, x2], [y1, y2], color=laser_color[t.laser], linewidth=width)
+
+        # make legend for lasers
+        from matplotlib.lines import Line2D
+
+        legend_elements = [
+            Line2D([0], [0], color=laser_color[l], lw=2, label=f"laser {i}")
+            for i, l in enumerate(unique_lasers)
+        ]
+        plt.legend(handles=legend_elements)
+
+        # label x axis with m values
+        plt.xticks(range(len(m_list)), [str(m) for m in m_list])
+        plt.xlabel("m")
+        plt.ylabel("Energy (THz)")
+        plt.tight_layout()
+        plt.show()

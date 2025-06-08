@@ -52,4 +52,34 @@ class Ion:
                 self.energy_levels.append(
                     HyperfineStructure(
                         str(level["n"])
-    
+                        + level["L"]
+                        + str(level["J"])
+                        + str(level["F"]),
+                        level["energy_Hz"] * Constants.h,
+                        level["n"],
+                        self.library["I"],
+                        L_str_to_int(level["L"]),
+                        level["J"],
+                        level["F"],
+                        2 * np.pi * level["line_width_2_pi_Hz"],
+                        self.branching_ratios[
+                            str(level["n"])
+                            + level["L"]
+                            + str(level["J"])
+                            + str(level["F"])
+                        ],
+                    )
+                )
+
+    def apply_magnetic_field(self, B_field: float):
+        self.B_field = B_field
+        for level in self.energy_levels:
+            level.apply_magnetic_field(B_field)
+
+
+if __name__ == "__main__":
+    ion = Ion("Ba", 138)
+    for energy_level in ion.energy_levels:
+        print(energy_level)
+        for zeeman_level in energy_level.zeeman_levels:
+            print(zeeman_level)
